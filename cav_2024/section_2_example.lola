@@ -1,0 +1,3 @@
+input altitude: Float
+output average_alt @1Hz := altitude.aggregate(over: 60s, using: avg).defaults(to: 0.0)
+trigger average_alt > 300.0

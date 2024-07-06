@@ -1,0 +1,22 @@
+import math
+
+constant ROTOR_1 : UInt8 := 1
+constant ROTOR_2 : UInt8 := 2
+constant EPSILON_RPM_ON : Float64 := 1.0
+constant EPSILON_RPM : Float64 := 0.5
+
+
+input rpm : Int64
+input src : UInt8
+
+output rpm_1 eval when src == ROTOR_1 with abs(cast<Int64, Float64>(rpm))
+output rpm_2 eval when src == ROTOR_2 with abs(cast<Int64, Float64>(rpm))
+
+output rpm_on_check @rpm := if rpm_1.hold(or: 0.0) + rpm_2.hold(or: 0.0) / 2.0 > EPSILON_RPM_ON then 1.0 else 0.0
+output rpm_on @1s := rpm_on_check.aggregate(over: 1s, using: avg).defaults(to: 0.0)  > EPSILON_RPM
+output take_off @1s := false
+output landed @1s := false
+output rpm_in_air @1s := false
+
+
+output phase_1 := ¬take_off ∧ ¬landed ∧ rpm_on ∧ ¬rpm_in_air

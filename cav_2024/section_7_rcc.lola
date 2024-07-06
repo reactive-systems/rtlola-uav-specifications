@@ -1,0 +1,15 @@
+input seq_number : Int64
+
+/// Helper Streams
+output lost_connection_to_master @true := false
+output switch_to_secondary @true := false
+output both_rc_disconnected @true := false
+
+/// Property 1: Log message increment
+output valid_seq_number := seq_number = seq_number.offset(by: -1, or: -1) + 1
+/// Property 7: RC fallback test
+output main_fallback_valid_dyn
+	spawn when lost_connection_to_master
+	close when switch_to_secondary ∨ both_rc_disconnected
+	eval @200ms with false
+output main_fallback_valid @true := main_fallback_valid_dyn.hold(or: true)
